@@ -1,6 +1,7 @@
 import { check, validationResult } from "express-validator";
 import { Usuario } from "../models/index.js";
 import { emailBienvenida } from "../helpers/email.js";
+import { generarJwt } from "../helpers/token.js";
 
 const registro = async (req, res) => {
   const { nombre, email, password } = req.body;
@@ -48,6 +49,40 @@ const registro = async (req, res) => {
   });
 };
 
-const login = (req, res) => {};
+const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  await check("email").isEmail().withMessage("No es un email valido").run(req);
+
+  await check("password")
+    .notEmpty()
+    .withMessage("El password es obligatorio")
+    .run(req);
+
+  let resultados = validationResult(req);
+
+  if (!resultados.isEmpty()) {
+    return res.json(resultados.array());
+  }
+
+  const usuario = await Usuario.findOne({
+    where: {
+      email,
+    },
+  });
+
+  if (!usuario) {
+    return res.json({ msg: "El usuario no esta registrado" });
+  }
+  //validar el password
+  if (!usuario.verificarPassword(password)) {
+    return res.json({ msg: "password incorrecto" });
+  }
+
+  //crear token
+  const token = generarJwt(usuario.id, usuario.nombre);
+
+  res.json({ token });
+};
 
 export { registro, login };

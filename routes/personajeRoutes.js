@@ -6,12 +6,13 @@ import {
   deletePersonajes,
   getPersonajeById,
 } from "../controllers/personajeController.js";
+import verificarToken from "../middleware/auth.js";
 const router = Router();
 
 router.get("/", getPersonajes);
 router.get("/:id", getPersonajeById);
-router.post("/", postPersonajes);
-router.put("/:id", putPersonajes);
-router.delete("/:id", deletePersonajes);
+router.post("/", verificarToken, postPersonajes);
+router.put("/:id", verificarToken, putPersonajes);
+router.delete("/:id", verificarToken, deletePersonajes);
 
 export default router;
